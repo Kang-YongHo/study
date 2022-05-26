@@ -1,10 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="header">
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <link rel="stylesheet" type="text/css" href="/node_modules/bootstrap/dist/css/bootstrap.css"/>
+  <link rel="stylesheet" href="/node_modules/font-awesome/css/font-awesome.min.css"/>
+  <script src="/node_modules/jquery/dist/jquery.js"></script>
+  <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+  <script src="/node_modules/jdenticon/dist/jdenticon.min.js"></script>
+  <title>공부</title>
+  <style>
+    .container {
+      width: 100%
+    }
+  </style>
 </head>
-<body>
-$END$
-</body>
+
+
+<nav th:fragment="main-nav" class="navbar navbar-expand-sm navbar-dark bg-dark">
+  <a class="navbar-brand" href="/" th:href="@{/}">
+    <img src="/images/icons8-futurama-bender-50.png" width="50" height="50">
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse"
+          data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false"
+          aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <form th:action="@{/search/study}" class="form-inline" method="get">
+          <input class="form-control mr-sm-2" name="keyword" type="search" placeholder="스터디 찾기"
+                 aria-label="Search"/>
+        </form>
+      </li>
+    </ul>
+
+    <ul class="navbar-nav justify-content-end">
+      <li class="nav-item" sec:authorize="!isAuthenticated()">
+        <a class="nav-link" href="#" th:href="@{/login}">로그인</a>
+      </li>
+      <li class="nav-item" sec:authorize="!isAuthenticated()">
+        <a class="nav-link" href="#" th:href="@{/sign-up}">가입</a>
+      </li>
+      <li class="nav-item" sec:authorize="isAuthenticated()">
+        <a class="nav-link" href="#" th:href="@{/noti}">
+          <i class="fa fa-bell-o"></i>
+        </a>
+      </li>
+      <li class="nav-item" sec:authorize="isAuthenticated()">
+        <a class="nav-link btn btn-outline-primary" href="#" th:href="@{/noti}">모임 개설</a>
+      </li>
+    </ul>
+  </div>
+  <div>
+    <form class="d-flex">
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        <svg data-jdenticon-value="user127" th:data-jdenticon-value="${#authentication.name}"
+             width="24" height="24" class="rounded border bg-light"></svg>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenu2">
+        <li>
+          <button class="dropdown-item" type="button">
+            <span sec:authentication="name">userName</span>
+          </button>
+        </li>
+        <li>
+          <a class="dropdown-item" th:href="@{'/profile/' + ${#authentication.name}}">프로필</a>
+        </li>
+        <li>
+          <button class="dropdown-item" type="button">모임</button>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li>
+          <button class="dropdown-item" type="button">설정</button>
+        </li>
+        <li>
+          <form class="form-inline my-2 my-lg-0" action="#" th:action="@{/logout}" method="post">
+            <button class="dropdown-item" type="submit">로그아웃</button>
+          </form>
+        </li>
+      </ul>
+    </form>
+  </div>
+
+</nav>
+
+
+<footer th:fragment="footer">
+  <div class="row justify-content-center">
+    <img class="mb-2" src="" alt="" width="100">
+    <small class="d-block mb-3 text-muted">&copy; <span th:text="${localDate}"></span></small>
+  </div>
+</footer>
+
+<script type="application/javascript" th:fragment="form-validation">
+  (function () {
+    'use strict';
+
+    window.addEventListener('load', function () {
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      var forms = document.getElementsByClassName('needs-validation');
+
+      // Loop over them and prevent submission
+      Array.prototype.filter.call(forms, function (form) {
+        form.addEventListener('submit', function (event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated')
+        }, false)
+      })
+    }, false)
+  }())
+</script>
+
 </html>

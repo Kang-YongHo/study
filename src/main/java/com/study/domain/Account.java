@@ -4,6 +4,8 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,6 +33,8 @@ public class Account {
 
     private String emailCheckToken;
 
+    private LocalDateTime emailCheckDate;
+
     private LocalDateTime joinDate;
 
     private String bio;
@@ -53,6 +57,7 @@ public class Account {
 
     public void generateEmailToken() {
         this.emailCheckToken = UUID.randomUUID().toString();
+        this.emailCheckDate = LocalDateTime.now();
     }
 
     public void completeSignUp(){
@@ -62,5 +67,9 @@ public class Account {
 
     public boolean isValidToken(String token) {
         return Objects.equals(this.emailCheckToken, token);
+    }
+
+    public boolean canSendConfirmEmail() {
+        return this.emailCheckDate.isBefore(LocalDateTime.now().minusHours(1));
     }
 }

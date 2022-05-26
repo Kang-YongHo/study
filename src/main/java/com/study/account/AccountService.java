@@ -4,12 +4,12 @@ import com.study.domain.Account;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,8 @@ import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
-public class AccountService {
+@Transactional
+public class AccountService implements UserDetailsService {
 
     private final AccountRepository accountRepository;
 
@@ -26,7 +27,6 @@ public class AccountService {
 
     private final PasswordEncoder passwordEncoder;
 
-    @Transactional
     public Account process(SignUpForm signUpForm) {
         Account save = getAccount(signUpForm);
         save.generateEmailToken();
@@ -58,7 +58,7 @@ public class AccountService {
 
     public void login(Account account) {
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
-                account.getNickname(),
+                new UserAccount(account),
                 account.getPassword(),
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(token);
@@ -71,5 +71,33 @@ public class AccountService {
 //        Authentication authenticate = authenticationManager.authenticate(token);
 //        SecurityContext context = SecurityContextHolder.getContext();
 //        context.setAuthentication(authenticate);
+    }
+
+    public void sendSignUpConfirmEmail(Account account) {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(account.getEmail());
+        mailMessage.setSubject("회원 가입 인증");
+        mailMessage.setText("/check-email-token?token=" + account.getEmailCheckToken() +
+                "&email=" + account.getEmail());
+        javaMailSender.send(mailMessage);
+
+
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public UserDetails loadUserByUsername(String nickOrMail) throws UsernameNotFoundException {
+        Account account = accountRepository.findByEmail(nickOrMail);
+        if(account == null){
+            account = accountRepository.findByNickname(nickOrMail);
+        }
+        if(account == null) throw new UsernameNotFoundException("user is not found");
+        return new UserAccount(account);
+    }
+
+
+    public void completeSignUp(Account byEmail) {
+        byEmail.completeSignUp();
+        login(byEmail);
     }
 }
